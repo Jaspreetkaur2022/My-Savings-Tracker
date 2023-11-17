@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Tracker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around;
+            height: 100vh;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: rgb(23, 21, 21);
+        }
+        .tracker-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px;
+            position: relative;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        label, button {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #219d54;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .progress-container {
+            width: 120px;
+            height: 120px;
+            margin-top: 20px;
+        }
+        .progress-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#27ae60 0%, #27ae60 calc(100% - 10%), transparent 10%);
+            clip-path: polygon(50% 50%, 0 0, 100% 0);
+            transform-origin: center center;
+            transform: rotate(-90deg);
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tracker-container">
+        <h1>Savings Tracker</h1>
+        <div class="progress-container">
+            <div class="progress-circle" id="savings-progress"></div>
+            <div class="progress-text" id="savings-text">0%</div>
+        </div>
+
+        <label for="savingsInput">Enter Savings:</label>
+        <input type="number" id="savingsInput">
+        <button onclick="recordSavings()">Record Savings</button>
+
+        <div>
+            <h2>Savings History:</h2>
+            <ul id="savingsList"></ul>
+        </div>
+
+        <div id="goal-reached"></div>
+    </div>
+
+    <div class="tracker-container">
+        <h1>Goal Tracker</h1>
+        <div class="progress-container">
+            <div class="progress-circle" id="goal-progress"></div>
+            <div class="progress-text" id="goal-text">0%</div>
+        </div>
+
+        <label for="goalInput">Set Savings Goal:</label>
+        <input type="number" id="goalInput">
+        <button onclick="setGoal()">Set Goal</button>
+    </div>
+
+    <div class="tracker-container">
+        <h1>Required Savings Tracker</h1>
+        <div class="progress-container">
+            <div class="progress-circle" id="required-progress"></div>
+            <div class="progress-text" id="required-text">0%</div>
+        </div>
+
+        <p id="required-savings-info"></p>
+        <button onclick="calculateRequired()">Calculate Required Savings</button>
+    </div>
+
+    <script>
+        let savings = 0;
+        let goal = 0;
+        let requiredSavings = 0;
+        let savingsHistory = [];
+
+        // Load savings history from local storage
+        if (localStorage.getItem('savingsHistory')) {
+            savingsHistory = JSON.parse(localStorage.getItem('savingsHistory'));
+        }
+
+        function recordSavings() {
+            const savingsInput = document.getElementById('savingsInput');
+            const amount = parseFloat(savingsInput.value);
+            if (!isNaN(amount) && amount > 0) {
+                savings += amount;
+                savingsHistory.push(amount);
+                updateUI();
+            }
+        }
+
+        function setGoal() {
+            const goalInput = document.getElementById('goalInput');
+            const amount = parseFloat(goalInput.value);
+            if (!isNaN(amount) && amount > 0) {
+                goal = amount;
+                updateUI();
+            }
+        }
+
+        function calculateRequired() {
+            requiredSavings = goal - savings;
+            if (requiredSavings < 0) {
+                requiredSavings = 0;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            const savingsContainer = document.getElementById('savings-progress');
+            const savingsText = document.getElementById('savings-text');
+            const goalContainer = document.getElementById('goal-progress');
+            const goalText = document.getElementById('goal-text');
+            const requiredContainer = document.getElementById('required-progress');
+            const requiredText = document.getElementById('required-text');
+            const requiredInfo = document.getElementById('required-savings-info');
+            const goalReached = document.getElementById('goal-reached');
+            const savingsList = document.getElementById('savingsList');
+
+            // Update Savings Tracker
+            const savingsPercentage = Math.min((savings / goal) * 100, 100);
+            savingsContainer.style.transform = `rotate(${savingsPercentage * 3.6}deg)`;
+            savingsText.textContent = `${savingsPercentage.toFixed(0)}%`;
+
+            // Update Goal Tracker
+            const goalPercentage = Math.min((goal / goal) * 100, 100);
+            goalContainer.style.transform = `rotate(${goalPercentage * 3.6}deg)`;
+            goalText.textContent = `${goalPercentage.toFixed(0)}%`;
+
+            // Update Required Savings Tracker
+            const requiredPercentage = Math.min((requiredSavings / goal) * 100, 100);
+            requiredContainer.style.transform = `rotate(${requiredPercentage * 3.6}deg)`;
+            requiredText.textContent = `${requiredPercentage.toFixed(0)}%`;
+
+            // Update Required Savings Information
+            requiredInfo.textContent = `You need $${requiredSavings.toFixed(2)} more to reach your goal.`;
+
+            // Update savings history
+            savingsList.innerHTML = '';
+            savingsHistory.forEach((amount, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Note ${index + 1}: $${amount}`;
+                savingsList.appendChild(listItem);
+            });
+
+            // Check if goal is reached
+            if (savings >= goal) {
+                goalReached.innerHTML = 'Goal Reached!';
+            } else {
+                goalReached.innerHTML = '';
+            }
+
+            // Save savings history to local storage
+            localStorage.setItem('savingsHistory', JSON.stringify(savingsHistory));
+        }
+    </script>
+</body>
+</html>
